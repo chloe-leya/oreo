@@ -13,7 +13,7 @@ st.set_page_config(page_title="Magic Story App", page_icon="🧸")
 def load_models():
     # Using the required model for image captioning
     img_pipe = pipeline("image-to-text", model="Salesforce/blip-image-captioning-base")
-    gen_pipe = pipeline("text-generation", model="microsoft/phi-2", device_map="cpu")
+    gen_pipe = pipeline("text-generation", model="TinyLlama/TinyLlama-1.1B-Chat-v1.0")
     audio_pipe = pipeline("text-to-audio", model="Matthijs/mms-tts-eng")
     return img_pipe, gen_pipe, audio_pipe
 
@@ -30,30 +30,26 @@ def text2story(description):
     _, gen_model, _ = load_models()
     
     # Phi-2 responds better to a structured 'Instruction' format[cite: 1]
-    prompt = f"Instruct: Write a simple 60-word bedtime story for a 5-year-old kid about {description}.\nOutput: "
+    prompt = f"<|system|>\nYou are a professional storyteller for 5-year-old kids. <|user|>\nWrite a simple, happy story (around 70 words) about: {description}. Use easy words. <|assistant|>\n"
     
     story_results = gen_model(
         prompt, 
-        max_new_tokens=100, 
+        max_new_tokens=120, 
         do_sample=True, 
         temperature=0.7,
-        pad_token_id=50256
+        top_k=50,
+        top_p=0.95
     )
     
+# Extract only the AI's response[cite: 1]
     full_text = story_results[0]['generated_text']
+    story_content = full_text.split("<|assistant|>\n")[-1].strip()
     
-    # Only capture the text AFTER 'Output: '[cite: 1]
-    if "Output: " in full_text:
-        story_content = full_text.split("Output: ")[-1].strip()
-    else:
-        story_content = full_text.replace(prompt, "").strip()
-        
-    # Ensure it ends with a complete sentence[cite: 1]
+    # Cleanup: Ensure it ends at a full sentence[cite: 1]
     if "." in story_content:
         story_content = story_content[:story_content.rindex(".")+1]
         
     return story_content
-
 
 # --- Function 3: Text to Audio ---
 def text2audio(story_text):
