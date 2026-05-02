@@ -30,7 +30,8 @@ if uploaded_file is not None:
 
     # Stage 2: Text to Story (Inline)
     st.text('Generating a story...')
-    story_pipe = pipeline("text-generation", model="pranavpsv/genre-story-generator-v2")
+    story_pipe = pipeline("text-generation", 
+                          model="pranavpsv/genre-story-generator-v2") #can try huggingface models
     story_results = story_pipe(scenario)
     story = story_results[0]['generated_text']
     st.write(f"**Story:** {story}")
