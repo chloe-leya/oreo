@@ -27,7 +27,7 @@ def img2text(image_data):
 
 # --- Function 2: Text to Story ---
 def text2story(text):
-   _, gen_model, _ = load_models()
+    _, gen_model, _ = load_models()
     
     # We use a natural opening to guide the model without repeating commands[cite: 1]
     prompt = f"Once upon a time, there was {text}. It was a beautiful day and "
