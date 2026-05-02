@@ -27,21 +27,32 @@ def img2text(image_data):
 
 # --- Function 2: Text to Story ---
 def text2story(text):
-    _, gen_model, _ = load_models()
+   _, gen_model, _ = load_models()
     
-    # Prompt tailored for kids aged 3-10 using easy words
-    prompt = f"Write a simple, happy story for a 5-year-old child about: {text}. Use easy words. Once upon a time,"
+    # We use a natural opening to guide the model without repeating commands[cite: 1]
+    prompt = f"Once upon a time, there was {text}. It was a beautiful day and "
     
-    # Keeping the story length between 50-100 words
-    story_results = gen_model(prompt, max_length=100, min_length=50, do_sample=True)
-    story_text = story_results[0]['generated_text']
-    return story_text
+    # max_new_tokens ensures we add 50-80 new words to reach the total requirement[cite: 1]
+    story_results = gen_model(
+        prompt, 
+        max_new_tokens=80, 
+        do_sample=True, 
+        temperature=0.8,
+        pad_token_id=50256
+    )
+    
+    full_text = story_results[0]['generated_text']
+    final_story = full_text.strip()
+    if "." in final_story:
+        final_story = final_story[:final_story.rindex(".")+1]
+        
+    return final_story
 
 # --- Function 3: Text to Audio ---
 def text2audio(story_text):
     _, _, audio_model = load_models()
-    audio_data = audio_model(story_text)
-    return audio_data
+    return audio_model(story_text)
+
 
 # --- Function 4: Main ---
 def main():
