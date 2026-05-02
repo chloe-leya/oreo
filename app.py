@@ -5,6 +5,8 @@
 import streamlit as st
 from transformers import pipeline
 
+st.set_page_config(page_title="Magic Story App", page_icon="🧸")
+
 # Helper function to load models safely and prevent memory crashes on Streamlit Cloud
 @st.cache_resource
 def load_models():
