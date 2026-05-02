@@ -4,6 +4,7 @@
 # Import part
 import streamlit as st
 from transformers import pipeline
+from PIL import Image
 
 st.set_page_config(page_title="Magic Story App", page_icon="🧸")
 
@@ -18,13 +19,10 @@ def load_models():
 
 # Function part
 # --- Function 1: Image to Text
-def img2text(url):
-    image_to_text_model = pipeline("image-to-text", model="Salesforce/blip-image-captioning-base")
-    text = image_to_text_model(url)[0]["generated_text"]
-    return text
 def img2text(image_data):
     img_model, _, _ = load_models()
-    text = img_model(image_data)[0]["generated_text"]
+    image = Image.open(image_data).convert("RGB")
+    text = img_model(image)[0]["generated_text"]
     return text
 
 # --- Function 2: Text to Story ---
@@ -55,7 +53,7 @@ def main():
 
     if uploaded_file is not None:
         # Show the uploaded image
-        st.image(uploaded_file, caption="Your Picture", use_container_width=True)
+        st.image(uploaded_file, use_container_width=True)
 
         # Trigger button
         if st.button("Generate Magic Story"):
