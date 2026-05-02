@@ -1,6 +1,6 @@
 import streamlit as st
 
-st.title("ISOM5240,:snowman:")
+st.title("ISOM5240 :snowman:")
 
 # Program title: Storytelling App
 
