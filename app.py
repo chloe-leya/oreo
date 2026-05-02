@@ -1,4 +1,5 @@
 import streamlit as st
 
 st.write("ISOM5240")
-st.write(":snowman:")
+st.title(":snowman:")
+st.header("header")
