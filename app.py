@@ -27,30 +27,28 @@ def img2text(image_data):
 
 # --- Function 2: Text to Story ---
 def text2story(description):
+    """Function 2: Optimized for faster generation on Streamlit Cloud."""
     _, gen_model, _ = load_models()
     
-    # Phi-2 responds better to a structured 'Instruction' format[cite: 1]
-    prompt = f"<|system|>\nYou are a professional storyteller for 5-year-old kids. <|user|>\nWrite a simple, happy story (around 70 words) about: {description}. Use easy words. <|assistant|>\n"
+    prompt = f"<|user|>\nWrite a 60-word kid story about {description}. <|assistant|>\n"
     
     story_results = gen_model(
         prompt, 
-        max_new_tokens=120, 
+        max_new_tokens=90,     # speed up
         do_sample=True, 
         temperature=0.7,
-        top_k=50,
-        top_p=0.95
+        top_k=40,              # scale down
+        repetition_penalty=1.1 # avoid loop
     )
     
-# Extract only the AI's response[cite: 1]
     full_text = story_results[0]['generated_text']
     story_content = full_text.split("<|assistant|>\n")[-1].strip()
     
-    # Cleanup: Ensure it ends at a full sentence[cite: 1]
     if "." in story_content:
         story_content = story_content[:story_content.rindex(".")+1]
         
     return story_content
-
+    
 # --- Function 3: Text to Audio ---
 def text2audio(story_text):
     _, _, audio_model = load_models()
