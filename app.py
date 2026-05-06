@@ -26,29 +26,33 @@ def img2text(image_data):
     return result[0]["generated_text"]
 
 def text2story(description):
-    """Function 2: Generates a story (50-100 words) for kids."""
+    """Function 2: Generates a gentle and safe story for kids."""
     _, gen_model, _ = load_models()
-    
+
     prompt = (
-        f"<|user|>\nTell a very simple story for a child about {description}. "
-        f"Use easy words. Keep it between 60 to 80 words. <|assistant|>\n"
+        f"<|user|>\n"
+        f"Write a very gentle and kind story for a 5-year-old about {description}. "
+        f"Rules: Only use happy words. The children must be friendly and share toys. "
+        f"No fighting, no screaming, no falling. "
+        f"Make it a sweet story about 60-70 words. <|assistant|>\n"
     )
     
     story_results = gen_model(
         prompt, 
-        max_new_tokens=120, 
+        max_new_tokens=120,   
         min_new_tokens=60, 
         do_sample=True, 
-        temperature=0.7
+        temperature=0.3,
+        repetition_penalty=1.2
     )
     
-    story = story_results[0]['generated_text'].split("<|assistant|>\n")[-1].strip()
-    
-    # Clean any potential AI prefixes
-    if ":" in story and len(story.split(":")[0]) < 15:
-        story = story.split(":")[-1].strip()
+    full_text = story_results[0]['generated_text']
+    story_content = full_text.split("<|assistant|>\n")[-1].strip()
+
+    if "." in story_content:
+        story_content = story_content[:story_content.rindex(".")+1]
         
-    return story[:500]
+    return story_content
 
 def text2audio(story_text):
     """Function 3: Converts text to speech."""
