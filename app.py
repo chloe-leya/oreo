@@ -17,7 +17,7 @@ def load_models():
     # Text Generation [cite: 23]
     gen_pipe = pipeline("text-generation", model="TinyLlama/TinyLlama-1.1B-Chat-v1.0")
     # Text-to-Speech [cite: 25]
-    tts_pipe = pipeline("text-to-audio", model="Matthijs/mms-tts-eng")
+    tts_pipe = pipeline("text-to-speech", model="facebook/fastspeech2-en-ljspeech")
     return img_pipe, gen_pipe, tts_pipe
     
 # Function part
@@ -65,8 +65,9 @@ def text2story(description):
 # --- Function 3: Text to Audio ---
 def text2audio(story_text):
     _, _, audio_model = load_models()
-    return audio_model(story_text)
-
+    output = audio_model(story_text)
+    
+    return output
 
 # --- Function 4: Main ---
 def main():
