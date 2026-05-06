@@ -1,6 +1,4 @@
-
 # Program title: Storytelling App
-
 # Import part
 import streamlit as st
 from transformers import pipeline
@@ -8,15 +6,20 @@ from PIL import Image
 
 st.set_page_config(page_title="Magic Story App", page_icon="🧸")
 
-# Helper function to load models safely and prevent memory crashes on Streamlit Cloud
 @st.cache_resource
 def load_models():
-    # Using the required model for image captioning
+    """
+    Loads and caches transformers pipelines for efficiency.
+    Ensures models are only loaded once to save memory on Streamlit Cloud.
+    """
+    # Image Captioning [cite: 21]
     img_pipe = pipeline("image-to-text", model="Salesforce/blip-image-captioning-base")
+    # Text Generation [cite: 23]
     gen_pipe = pipeline("text-generation", model="TinyLlama/TinyLlama-1.1B-Chat-v1.0")
-    audio_pipe = pipeline("text-to-audio", model="Matthijs/mms-tts-eng")
-    return img_pipe, gen_pipe, audio_pipe
-
+    # Text-to-Speech [cite: 25]
+    tts_pipe = pipeline("text-to-audio", model="Matthijs/mms-tts-eng")
+    return img_pipe, gen_pipe, tts_pipe
+    
 # Function part
 # --- Function 1: Image to Text
 def img2text(image_data):
@@ -30,22 +33,26 @@ def text2story(description):
     """Function 2: Balanced for professional quality and generation speed."""
     _, gen_model, _ = load_models()
     
-    # Improved prompt to encourage more vivid storytelling
-    prompt = f"<|user|>\nWrite a fun and imaginative 80-word story for a child about {description}. <|assistant|>\n"
+# Specific instruction to use easy vocabulary for 3-10 year olds 
+    prompt = (
+        f"<|user|>\nWrite a very simple story for a 5-year-old about {description}. "
+        f"Use basic words like 'big', 'fun', and 'play'. Make it 70 words long. <|assistant|>\n"
+    )
     
     story_results = gen_model(
         prompt, 
-        max_new_tokens=150,     # Increased for richer content
+        max_new_tokens=120,   # Limit length to stay under 100 words 
+        min_new_tokens=60,    # Ensure at least 50 words 
         do_sample=True, 
-        temperature=0.8,        # Slightly more creative
-        top_k=50,
-        repetition_penalty=1.2  # Higher penalty to ensure more varied vocabulary
+        temperature=0.7,
+        repetition_penalty=1.2
     )
     
+    # Cleaning the output to show only the story
     full_text = story_results[0]['generated_text']
     story_content = full_text.split("<|assistant|>\n")[-1].strip()
     
-    # Ensure the story ends perfectly at the last full sentence
+    # Cut off at the last full sentence for better readability
     if "." in story_content:
         story_content = story_content[:story_content.rindex(".")+1]
         
@@ -72,23 +79,20 @@ def main():
             with st.spinner("Making magic..."):
                 
                 # Execute the 3 stages
-                desc = img2text(uploaded_file)
-                st.info(f"I see: {desc}")
+                # Step 1: Captioning
+                caption = img2text(uploaded_file)
+                st.info(f"I see: {caption}")
                 
-                story = text2story(desc)
+                # Step 2: Story Generation
+                story = text2story(caption)
                 st.subheader("Your Story")
                 st.write(story)
                 
-                audio_output = text2audio(story)
-                st.audio(audio_output["audio"], sample_rate=audio_output["sampling_rate"])
+                # Step 3: Audio Conversion
+                audio_data = text2audio(story)
+                st.audio(audio_data["audio"], sample_rate=audio_data["sampling_rate"])
                 
-                # Fun balloon animation for kids[cite: 1]
                 st.balloons()
-
-
-# Run the application
 
 if __name__ == "__main__":
     main()
-
-
