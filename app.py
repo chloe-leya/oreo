@@ -60,7 +60,7 @@ def text2audio(story_text):
 def main():
     """Function 4: The interactive UI."""
     st.title("🧸 Magic Storyteller")
-    st.subtitle("Upload a picture to see and hear a story!")
+    st.markdown("### Upload a picture to see and hear a story!")
 
     uploaded_file = st.file_uploader("Select an Image", type=["jpg", "png", "jpeg"])
 
