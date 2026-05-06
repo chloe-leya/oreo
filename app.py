@@ -33,7 +33,7 @@ def text2story(description):
     _, gen_model, _ = load_models()
     
 # Specific instruction to use easy vocabulary for 3-10 year olds 
-prompt = (
+    prompt = (
         f"<|user|>\n"
         f"You are a world-class storyteller for 5-year-old children. "
         f"Write a magical, happy story about: {description}. "
