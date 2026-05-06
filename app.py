@@ -1,4 +1,3 @@
-# Program title: Storytelling App for Kids
 import streamlit as st
 from transformers import pipeline
 from PIL import Image
@@ -8,79 +7,64 @@ st.set_page_config(page_title="Magic Story App", page_icon="🧸")
 
 @st.cache_resource
 def load_models():
-    """
-    Loads pre-trained models. 
-    Optimized for stability on Streamlit Cloud. [cite: 72]
-    """
-    # Image Captioning: BLIP model [cite: 64]
+    """Loads pre-trained models. Optimized for Streamlit Cloud stability."""
+    # Image Captioning [cite: 20, 21]
     img_pipe = pipeline("image-to-text", model="Salesforce/blip-image-captioning-base")
-    # Text Generation: TinyLlama [cite: 66]
+    # Text Generation [cite: 23]
     gen_pipe = pipeline("text-generation", model="TinyLlama/TinyLlama-1.1B-Chat-v1.0")
-    # Text-to-Speech: MMS TTS [cite: 68]
-    tts_pipe = pipeline("text-to-speech", model="facebook/mms-tts-eng")
-    
+    # Standard TTS [cite: 25]
+    tts_pipe = pipeline("text-to-audio", model="Matthijs/mms-tts-eng")
     return img_pipe, gen_pipe, tts_pipe
 
-# --- 2. MODULAR FUNCTIONS ---
 
+# --- 2. FUNCTIONS ---
 def img2text(image_data):
-    """Function 1: Processes image and generates a caption. [cite: 62]"""
+    """Function 1: Extracts description from image."""
     img_model, _, _ = load_models()
     image = Image.open(image_data).convert("RGB")
     result = img_model(image)
     return result[0]["generated_text"]
 
 def text2story(description):
-    """Function 2: Generates a gentle 50-100 word narrative. [cite: 57, 65]"""
+    """Function 2: Generates a gentle and safe story for kids."""
     _, gen_model, _ = load_models()
     
-    # Safe and gentle prompt for children 
     prompt = (
         f"<|user|>\n"
-        f"Tell a very gentle, happy story for a toddler about {description}. "
-        f"Rules: Use easy words like 'sun', 'happy', 'friend'. "
-        f"The kids are kind and share toys. Make it 70 words long. <|assistant|>\n"
+        f"Write a very gentle and kind story for a 5-year-old about {description}. "
+        f"Rules: Only use happy words. The children must be friendly and share toys. "
+        f"No fighting, no screaming, no falling. "
+        f"Make it a sweet story about 60-70 words. <|assistant|>\n"
     )
-    
+
     story_results = gen_model(
         prompt, 
         max_new_tokens=120,   
         min_new_tokens=60, 
         do_sample=True, 
-        temperature=0.3, # Low temperature for polite and stable logic
+        temperature=0.3,
         repetition_penalty=1.2
     )
-    
-    story = story_results[0]['generated_text'].split("<|assistant|>\n")[-1].strip()
-    if "." in story:
-        story = story[:story.rindex(".")+1]
-    return story
+  
+    full_text = story_results[0]['generated_text']
+    story_content = full_text.split("<|assistant|>\n")[-1].strip()
+
+    if "." in story_content:
+        story_content = story_content[:story_content.rindex(".")+1]
+
+    return story_content
+
 
 def text2audio(story_text):
-    """Function 3: Converts narrative to audio. [cite: 59, 67]"""
+    """Function 3: Converts text to speech."""
     _, _, tts_model = load_models()
     return tts_model(story_text)
 
 # --- 3. MAIN UI ---
-
 def main():
-    """Function 4: Interactive UI for kids. [cite: 71, 74]"""
-    # CSS to make the button bigger for kids
-    st.markdown("""
-        <style>
-        div.stButton > button:first-child {
-            font-size: 24px; 
-            height: 3em;
-            width: 100%;
-            border-radius: 20px;
-            background-color: #FFD700;
-        }
-        </style>
-    """, unsafe_allow_html=True)
-
+    """Function 4: The interactive UI."""
     st.title("🧸 Magic Storyteller")
-    # Larger font for the instruction
-    st.markdown("### Upload a picture to hear a magic story!")
+    st.markdown("### Upload a picture to see and hear a story!")
 
     uploaded_file = st.file_uploader("Select an Image", type=["jpg", "png", "jpeg"])
 
@@ -88,19 +72,20 @@ def main():
         st.image(uploaded_file, use_container_width=True)
 
         if st.button("🌟 Start Magic"):
-            with st.spinner("Writing your story..."):
-                # Execution stages
-                caption = img2text(uploaded_file)
-                story = text2story(caption)
+            with st.spinner("Wait a moment..."):
+                # 1. Image to Text
+                desc = img2text(uploaded_file)
                 
-                # Display story text directly
+                # 2. Text to Story
+                story = text2story(desc)
                 st.write(story)
-                
-                # Audio conversion and playback
+
+                # 3. Text to Audio
                 audio_data = text2audio(story)
                 st.audio(audio_data["audio"], sample_rate=audio_data["sampling_rate"])
-                
+
                 st.balloons()
 
 if __name__ == "__main__":
+
     main()
