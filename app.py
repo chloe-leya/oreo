@@ -1,84 +1,83 @@
-# Program title: Storytelling App
 import streamlit as st
 from transformers import pipeline
 from PIL import Image
 
+# --- 1. CONFIGURATION ---
 st.set_page_config(page_title="Magic Story App", page_icon="🧸")
 
 @st.cache_resource
 def load_models():
-    """Loads pre-trained models. Using a stable female voice model."""
-    # Image Captioning
+    """Loads pre-trained models. Optimized for Streamlit Cloud stability."""
+    # Image Captioning [cite: 20, 21]
     img_pipe = pipeline("image-to-text", model="Salesforce/blip-image-captioning-base")
-    # Text Generation 
+    # Text Generation [cite: 23]
     gen_pipe = pipeline("text-generation", model="TinyLlama/TinyLlama-1.1B-Chat-v1.0")
-    # Audio Generation
-    tts_pipe = pipeline("text-to-speech", model="facebook/mms-tts-eng")
-    
+    # Standard TTS [cite: 25]
+    tts_pipe = pipeline("text-to-audio", model="Matthijs/mms-tts-eng")
     return img_pipe, gen_pipe, tts_pipe
 
-# --- Function 1: Image to Text
+# --- 2. FUNCTIONS ---
+
 def img2text(image_data):
+    """Function 1: Extracts description from image."""
     img_model, _, _ = load_models()
     image = Image.open(image_data).convert("RGB")
     result = img_model(image)
     return result[0]["generated_text"]
 
-# --- Function 2: Text to Story ---
 def text2story(description):
-    """Generates a simple kid-friendly story (50-100 words)."""
+    """Function 2: Generates a story (50-100 words) for kids."""
     _, gen_model, _ = load_models()
     
     prompt = (
-        f"<|user|>\n"
-        f"Tell a very simple, happy story for a child about {description}. "
-        f"Use easy words like 'sun', 'happy', 'play'. "
-        f"Make it a happy story about 60 words. <|assistant|>\n"
+        f"<|user|>\nTell a very simple story for a child about {description}. "
+        f"Use easy words. Keep it between 60 to 80 words. <|assistant|>\n"
     )
     
     story_results = gen_model(
         prompt, 
-        max_new_tokens=120,   
+        max_new_tokens=120, 
         min_new_tokens=60, 
         do_sample=True, 
-        temperature=0.6,
-        repetition_penalty=1.2
+        temperature=0.7
     )
     
-    full_text = story_results[0]['generated_text']
-    story_content = full_text.split("<|assistant|>\n")[-1].strip()
-
-    if "." in story_content:
-        story_content = story_content[:story_content.rindex(".")+1]
-        
-    return story_content
+    story = story_results[0]['generated_text'].split("<|assistant|>\n")[-1].strip()
     
-# --- Function 3: Text to Audio ---
+    # Clean any potential AI prefixes
+    if ":" in story and len(story.split(":")[0]) < 15:
+        story = story.split(":")[-1].strip()
+        
+    return story[:500]
+
 def text2audio(story_text):
-    """Converts text to speech using the selected model."""
+    """Function 3: Converts text to speech."""
     _, _, tts_model = load_models()
     return tts_model(story_text)
 
-# --- Function 4: Main ---
+# --- 3. MAIN UI ---
+
 def main():
+    """Function 4: The interactive UI."""
     st.title("🧸 Magic Storyteller")
-    st.write("Welcome! Upload a picture, and I will tell you a fun story!")
+    st.subtitle("Upload a picture to see and hear a story!")
 
-    uploaded_file = st.file_uploader("Select an Image...", type=["jpg", "png", "jpeg"])
+    uploaded_file = st.file_uploader("Select an Image", type=["jpg", "png", "jpeg"])
 
-    if uploaded_file is not None:
+    if uploaded_file:
         st.image(uploaded_file, use_container_width=True)
 
         if st.button("🌟 Start Magic"):
-            with st.spinner("Making magic..."):
-
-                caption = img2text(uploaded_file)
-                story = text2story(caption)
+            with st.spinner("Wait a moment..."):
+                # 1. Image to Text
+                desc = img2text(uploaded_file)
                 
-                st.subheader("Your Simple Story")
+                # 2. Text to Story
+                story = text2story(desc)
+                
                 st.write(story)
                 
-                # Audio part
+                # 3. Text to Audio
                 audio_data = text2audio(story)
                 st.audio(audio_data["audio"], sample_rate=audio_data["sampling_rate"])
                 
