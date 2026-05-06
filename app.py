@@ -9,15 +9,16 @@ st.set_page_config(page_title="Magic Story App", page_icon="🧸")
 @st.cache_resource
 def load_models():
     """
-    Loads and caches transformers pipelines for efficiency.
-    Ensures models are only loaded once to save memory on Streamlit Cloud.
+    Loads pre-trained models from Hugging Face. [cite: 5, 20]
+    Using cached resources to optimize Streamlit performance. [cite: 28]
     """
     # Image Captioning [cite: 21]
     img_pipe = pipeline("image-to-text", model="Salesforce/blip-image-captioning-base")
-    # Text Generation [cite: 23]
+    # Text Generation (TinyLlama is stable and fast) [cite: 23]
     gen_pipe = pipeline("text-generation", model="TinyLlama/TinyLlama-1.1B-Chat-v1.0")
-    # Text-to-Speech [cite: 25]
-    tts_pipe = pipeline("text-to-speech", model="facebook/fastspeech2-en-ljspeech")
+    # Text-to-Speech (High-quality female voice) [cite: 25]
+    tts_pipe = pipeline("text-to-speech", model="espnet/kan-bayashi_ljspeech_vits")
+    
     return img_pipe, gen_pipe, tts_pipe
     
 # Function part
@@ -43,8 +44,8 @@ def text2story(description):
     
     story_results = gen_model(
         prompt, 
-        max_new_tokens=100,   # Limit length to stay under 100 words 
-        min_new_tokens=60,    # Ensure at least 50 words 
+        max_new_tokens=120,   
+        min_new_tokens=60, 
         do_sample=True, 
         temperature=0.6,
         repetition_penalty=1.2
@@ -54,9 +55,6 @@ def text2story(description):
     full_text = story_results[0]['generated_text']
     story_content = full_text.split("<|assistant|>\n")[-1].strip()
 
-    if ":" in story_content and len(story_content.split(":")[0]) < 15:
-        story_content = story_content.split(":")[-1].strip()
-
     if "." in story_content:
         story_content = story_content[:story_content.rindex(".")+1]
         
@@ -64,8 +62,8 @@ def text2story(description):
     
 # --- Function 3: Text to Audio ---
 def text2audio(story_text):
-    _, _, audio_model = load_models()
-    output = audio_model(story_text)
+    _, _, tts_model = load_models()
+    return tts_model(story_text)
     
     return output
 
@@ -82,18 +80,15 @@ def main():
         # Trigger button
         if st.button("🌟 Start Magic"):
             with st.spinner("Making magic..."):
-                
-                # Execute the 3 stages
-                # Step 1: Captioning
+ 
+                # Execution stages 
                 caption = img2text(uploaded_file)
-                st.info(f"I see: {caption}")
-                
-                # Step 2: Story Generation
                 story = text2story(caption)
-                st.subheader("Your Story")
+                
+                st.subheader("Your Simple Story")
                 st.write(story)
                 
-                # Step 3: Audio Conversion
+                # Audio part [cite: 16]
                 audio_data = text2audio(story)
                 st.audio(audio_data["audio"], sample_rate=audio_data["sampling_rate"])
                 
