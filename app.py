@@ -27,23 +27,25 @@ def img2text(image_data):
 
 # --- Function 2: Text to Story ---
 def text2story(description):
-    """Function 2: Optimized for faster generation on Streamlit Cloud."""
+    """Function 2: Balanced for professional quality and generation speed."""
     _, gen_model, _ = load_models()
     
-    prompt = f"<|user|>\nWrite a 60-word kid story about {description}. <|assistant|>\n"
+    # Improved prompt to encourage more vivid storytelling
+    prompt = f"<|user|>\nWrite a fun and imaginative 80-word story for a child about {description}. <|assistant|>\n"
     
     story_results = gen_model(
         prompt, 
-        max_new_tokens=90,     # speed up
+        max_new_tokens=150,     # Increased for richer content
         do_sample=True, 
-        temperature=0.7,
-        top_k=40,              # scale down
-        repetition_penalty=1.1 # avoid loop
+        temperature=0.8,        # Slightly more creative
+        top_k=50,
+        repetition_penalty=1.2  # Higher penalty to ensure more varied vocabulary
     )
     
     full_text = story_results[0]['generated_text']
     story_content = full_text.split("<|assistant|>\n")[-1].strip()
     
+    # Ensure the story ends perfectly at the last full sentence
     if "." in story_content:
         story_content = story_content[:story_content.rindex(".")+1]
         
