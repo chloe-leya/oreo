@@ -30,13 +30,16 @@ def img2text(image_data):
 
 # --- Function 2: Text to Story ---
 def text2story(description):
-    """Function 2: Balanced for professional quality and generation speed."""
     _, gen_model, _ = load_models()
     
 # Specific instruction to use easy vocabulary for 3-10 year olds 
-    prompt = (
-        f"<|user|>\nWrite a very simple story for a 5-year-old about {description}. "
-        f"Use basic words like 'big', 'fun', and 'play'. Make it 70 words long. <|assistant|>\n"
+prompt = (
+        f"<|user|>\n"
+        f"You are a world-class storyteller for 5-year-old children. "
+        f"Write a magical, happy story about: {description}. "
+        f"Include cheerful sounds, bright colors, and simple feelings. "
+        f"Use very easy words. Make it around 70-80 words. "
+        f"Start the story directly. <|assistant|>\n"
     )
     
     story_results = gen_model(
@@ -51,7 +54,12 @@ def text2story(description):
     # Cleaning the output to show only the story
     full_text = story_results[0]['generated_text']
     story_content = full_text.split("<|assistant|>\n")[-1].strip()
-    
+
+    prefixes_to_remove = ["Picture:", "Story:", "Narrative:", "Description:"]
+    for prefix in prefixes_to_remove:
+        if story_content.startswith(prefix):
+            story_content = story_content[len(prefix):].strip()
+            
     # Cut off at the last full sentence for better readability
     if "." in story_content:
         story_content = story_content[:story_content.rindex(".")+1]
