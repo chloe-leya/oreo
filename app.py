@@ -35,19 +35,18 @@ def text2story(description):
 # Specific instruction to use easy vocabulary for 3-10 year olds 
     prompt = (
         f"<|user|>\n"
-        f"You are a world-class storyteller for 5-year-old children. "
-        f"Write a magical, happy story about: {description}. "
-        f"Include cheerful sounds, bright colors, and simple feelings. "
-        f"Use very easy words. Make it around 70-80 words. "
-        f"Start the story directly. <|assistant|>\n"
+        f"Write a very simple story for a toddler about {description}. "
+        f"Rules: Use easy words like 'sun', 'happy', 'play'. "
+        f"Use short sentences. No hard words. "
+        f"Make it a happy story about 60 words long. <|assistant|>\n"
     )
     
     story_results = gen_model(
         prompt, 
-        max_new_tokens=120,   # Limit length to stay under 100 words 
+        max_new_tokens=100,   # Limit length to stay under 100 words 
         min_new_tokens=60,    # Ensure at least 50 words 
         do_sample=True, 
-        temperature=0.7,
+        temperature=0.6,
         repetition_penalty=1.2
     )
     
@@ -55,12 +54,9 @@ def text2story(description):
     full_text = story_results[0]['generated_text']
     story_content = full_text.split("<|assistant|>\n")[-1].strip()
 
-    prefixes_to_remove = ["Picture:", "Story:", "Narrative:", "Description:"]
-    for prefix in prefixes_to_remove:
-        if story_content.startswith(prefix):
-            story_content = story_content[len(prefix):].strip()
-            
-    # Cut off at the last full sentence for better readability
+    if ":" in story_content and len(story_content.split(":")[0]) < 15:
+        story_content = story_content.split(":")[-1].strip()
+
     if "." in story_content:
         story_content = story_content[:story_content.rindex(".")+1]
         
