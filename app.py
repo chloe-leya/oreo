@@ -36,10 +36,8 @@ def text2story(description):
     
     prompt = (
         f"<|user|>\n"
-        f"Write a very short, gentle, and sweet story for a 5-year-old child about {description}. "
-        f"The story must be about 60 words and have a clear beginning and ending. "
-        f"Use only happy words. Everything is peaceful and safe. No loud noises or accidents. "
-        f"End the story with a warm closing like 'The end'. <|assistant|>\n"
+        f"Tell a 60-word happy story for a 5-year-old about {description}. "
+        f"It must be peaceful and end with 'The end'. <|assistant|>\n"
     )
     
     # Sampling parameters tuned for creative yet stable output (low temperature = more polite)
