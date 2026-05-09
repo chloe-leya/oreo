@@ -37,7 +37,14 @@ def text2story(description):
     _, gen_model, _ = load_models()
     
     # TinyStories model works best with a simple narrative prompt
-    prompt = f"Once upon a time, there was {description}. The children were very happy and "
+    
+    prompt = (
+        f"<|user|>\n"
+        f"Write a very short, gentle, and sweet story for a 5-year-old child about {description}. "
+        f"The story must be about 60 words and have a clear beginning and ending. "
+        f"Use only happy words. Everything is peaceful and safe. No loud noises or accidents. "
+        f"End the story with a warm closing like 'The end'. <|assistant|>\n"
+    )
     
     # Generate story with parameters optimized for the 33M model
     story_results = gen_model(
