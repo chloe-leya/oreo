@@ -8,12 +8,12 @@ st.set_page_config(page_title="Magic Story App", page_icon="🧸")
 @st.cache_resource
 def load_models():
     """
-    Loads pre-trained models. TinyLlama-1.1B is used for a balance of speed and logic.
+    Loads pre-trained models.
     """
     # Image Captioning
     img_pipe = pipeline("image-to-text", model="Salesforce/blip-image-captioning-base")
     # Text Generation
-    gen_pipe = pipeline("text-generation", model="TinyLlama/TinyLlama-1.1B-Chat-v1.0")
+    gen_pipe = pipeline("text-generation", model="Qwen/Qwen2.5-0.5B-Instruct")
     # Standard TTS
     tts_pipe = pipeline("text-to-audio", model="Matthijs/mms-tts-eng")
     return img_pipe, gen_pipe, tts_pipe
