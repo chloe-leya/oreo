@@ -38,8 +38,7 @@ def text2story(description):
         f"<|user|>\n"
         f"Write a very short, gentle, and sweet story for a 5-year-old child about {description}. "
         f"The story must be about 60 words and have a clear beginning and ending. "
-        f"Guidelines: Use only happy words. The children are friendly and sharing. "
-        f"Everything is peaceful and safe. No loud noises or accidents. "
+        f"Guidelines: Use only happy words. Everything is peaceful and safe. No loud noises or accidents. "
         f"End the story with a warm closing like 'The end'. <|assistant|>\n"
     )
     
