@@ -36,10 +36,11 @@ def text2story(description):
     
     prompt = (
         f"<|user|>\n"
-        f"Write a complete, short, and very gentle story for a 5-year-old child about {description}. "
-        f"Structure: Start with 'Once upon a time', describe a happy scene, and end with a clear 'The end'. "
-        f"Rules: Only use kind words. Children must share and be friends. No fighting or accidents. "
-        f"Length: Exactly 3 to 4 simple sentences (around 60 words). <|assistant|>\n"
+        f"Create a very simple, 3-sentence happy story for a 5-year-old about {description}. "
+        f"Sentence 1: Start with 'Once upon a time' and describe the friends playing. "
+        f"Sentence 2: Describe a kind action, like sharing a toy or a smile. "
+        f"Sentence 3: End the story with: 'They all had a wonderful day. The end.' "
+        f"Rules: No bad news, no accidents, and no loud noises. Be sweet and complete. <|assistant|>\n"
     )
     
     # Sampling parameters tuned for creative yet stable output (low temperature = more polite)
