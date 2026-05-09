@@ -14,8 +14,10 @@ def load_models():
     """
     # Image Captioning：BLIP model for generating a text description from an uploaded image
     img_pipe = pipeline("image-to-text", model="Salesforce/blip-image-captioning-base")
-    # Text Generation： TinyLlama model for creative text generation (optimized for small-scale deployment)
-    gen_pipe = pipeline("text-generation", model="TinyLlama/TinyLlama-1.1B-Chat-v1.0")
+    
+    # Text Generation: Changed to TinyStories-33M for faster CPU inference and kid-friendly content
+    gen_pipe = pipeline("text-generation", model="roneneldan/TinyStories-33M")
+    
     # Standard TTS： Facebook's MMS model for converting the generated story into natural speech
     tts_pipe = pipeline("text-to-audio", model="Matthijs/mms-tts-eng")
     return img_pipe, gen_pipe, tts_pipe
@@ -31,32 +33,31 @@ def img2text(image_data):
     return result[0]["generated_text"]
 
 def text2story(description):
-    """Function 2: Generates a gentle and safe story for kids."""
+    """Function 2: Generates a gentle and safe story for kids using TinyStories."""
     _, gen_model, _ = load_models()
     
-    prompt = (
-        f"<|user|>\n"
-        f"Tell a 60-word happy story for a 5-year-old about {description}. "
-        f"It must be peaceful and end with 'The end'. <|assistant|>\n"
-    )
+    # TinyStories model works best with a simple narrative prompt
+    prompt = f"Once upon a time, there was {description}. The children were very happy and "
     
-    # Sampling parameters tuned for creative yet stable output (low temperature = more polite)
+    # Generate story with parameters optimized for the 33M model
     story_results = gen_model(
         prompt, 
-        max_new_tokens=90,   
-        min_new_tokens=55, 
+        max_new_tokens=85,    # Keeps it within the 50-100 word requirement
         do_sample=True, 
-        temperature=0.3,
-        repetition_penalty=1.2
+        temperature=0.7, 
+        top_p=0.95,
+        repetition_penalty=1.1
     )
 
-    # Clean the output to ensure it only contains the assistant's generated story
-    full_text = story_results[0]['generated_text']
-    story_content = full_text.split("<|assistant|>\n")[-1].strip()
+    story_content = story_results[0]['generated_text']
 
     # Ensure the story ends at a full sentence
     if "." in story_content:
         story_content = story_content[:story_content.rindex(".")+1]
+        
+    # Manually append the ending to ensure completeness as requested
+    if "The end" not in story_content:
+        story_content += " They all had a wonderful day. The end."
 
     return story_content
 
@@ -64,6 +65,7 @@ def text2story(description):
 def text2audio(story_text):
     """Function 3: Converts text to speech."""
     _, _, tts_model = load_models()
+    # Ensure standard task name is used
     return tts_model(story_text)
 
 # --- 3. MAIN UI ---
@@ -75,7 +77,7 @@ def main():
     uploaded_file = st.file_uploader("Select an Image", type=["jpg", "png", "jpeg"])
 
     if uploaded_file:
-        st.image(uploaded_file, width='stretch')
+        st.image(uploaded_file, use_container_width=True)
 
         if st.button("🌟 Start Magic"):
             progress_bar = st.progress(0)
@@ -89,7 +91,7 @@ def main():
             # Step 2: Story Generation
             status_text.text("Creating a magic story...")
             story = text2story(desc)
-            st.write(story)
+            st.info(story) # Show story text first to improve UX
             progress_bar.progress(66)
             
             # Step 3: Audio Synthesis
