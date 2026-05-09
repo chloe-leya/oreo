@@ -8,11 +8,11 @@ st.set_page_config(page_title="Magic Story App", page_icon="🧸")
 @st.cache_resource
 def load_models():
     """Loads pre-trained models. Optimized for Streamlit Cloud stability."""
-    # Image Captioning [cite: 20, 21]
+    # Image Captioning 
     img_pipe = pipeline("image-to-text", model="Salesforce/blip-image-captioning-base")
-    # Text Generation [cite: 23]
+    # Text Generation 
     gen_pipe = pipeline("text-generation", model="TinyLlama/TinyLlama-1.1B-Chat-v1.0")
-    # Standard TTS [cite: 25]
+    # Standard TTS 
     tts_pipe = pipeline("text-to-audio", model="Matthijs/mms-tts-eng")
     return img_pipe, gen_pipe, tts_pipe
 
@@ -31,10 +31,10 @@ def text2story(description):
     
     prompt = (
         f"<|user|>\n"
-        f"Write a very gentle and kind story for a 5-year-old about {description}. "
-        f"Rules: Only use happy words. The children must be friendly and share toys. "
-        f"No fighting, no screaming, no falling. "
-        f"Make it a sweet story about 60-70 words. <|assistant|>\n"
+        f"Write a complete, short, and very gentle story for a 5-year-old child about {description}. "
+        f"Structure: Start with 'Once upon a time', describe a happy scene, and end with a clear 'The end'. "
+        f"Rules: Only use kind words. Children must share and be friends. No fighting or accidents. "
+        f"Length: Exactly 3 to 4 simple sentences (around 60 words). <|assistant|>\n"
     )
 
     story_results = gen_model(
@@ -69,23 +69,28 @@ def main():
     uploaded_file = st.file_uploader("Select an Image", type=["jpg", "png", "jpeg"])
 
     if uploaded_file:
-        st.image(uploaded_file, use_container_width=True)
+        st.image(uploaded_file, width='stretch')
 
         if st.button("🌟 Start Magic"):
-            with st.spinner("Wait a moment..."):
-                # 1. Image to Text
-                desc = img2text(uploaded_file)
-                
-                # 2. Text to Story
-                story = text2story(desc)
-                st.write(story)
-
-                # 3. Text to Audio
-                audio_data = text2audio(story)
-                st.audio(audio_data["audio"], sample_rate=audio_data["sampling_rate"])
-
-                st.balloons()
+            progress_bar = st.progress(0)
+            status_text = st.empty()
+            
+            status_text.text("Reading the picture...")
+            desc = img2text(uploaded_file)
+            progress_bar.progress(33)
+            
+            status_text.text("Creating a magic story...")
+            story = text2story(desc)
+            st.write(story)
+            progress_bar.progress(66)
+            
+            status_text.text("Turning story into voice...")
+            audio_data = text2audio(story)
+            st.audio(audio_data["audio"], sample_rate=audio_data["sampling_rate"])
+            progress_bar.progress(100)
+            
+            status_text.text("Done!")
+            st.balloons()
 
 if __name__ == "__main__":
-
     main()
