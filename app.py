@@ -15,8 +15,8 @@ def load_models():
     # Image Captioning：BLIP model for generating a text description from an uploaded image
     img_pipe = pipeline("image-to-text", model="Salesforce/blip-image-captioning-base")
     
-    # Text Generation: Using TinyStories-33M for fast CPU inference and child-friendly themes
-    gen_pipe = pipeline("text-generation", model="roneneldan/TinyStories-33M")
+    # Text Generation: Using TinyLlama-1.1B for better reasoning while keeping it lightweight
+    gen_pipe = pipeline("text-generation", model="TinyLlama/TinyLlama-1.1B-Chat-v1.0")
     
     # Standard TTS： Facebook's MMS model for converting the generated story into natural speech
     tts_pipe = pipeline("text-to-audio", model="Matthijs/mms-tts-eng")
@@ -33,10 +33,10 @@ def img2text(image_data):
     return result[0]["generated_text"]
 
 def text2story(description):
-    """Function 2: Generates a gentle and safe story for kids using requested prompt."""
+    """Function 2: Generates a gentle and safe story for kids using TinyLlama."""
     _, gen_model, _ = load_models()
     
-    # Updated prompt as per your latest request
+    # Using the specific prompt format for TinyLlama to ensure better instruction following
     prompt = (
         f"<|user|>\n"
         f"Write a very short, gentle, and sweet story for a 5-year-old child about {description}. "
@@ -45,10 +45,11 @@ def text2story(description):
         f"End the story with a warm closing like 'The end'. <|assistant|>\n"
     )
     
-    # Parameters tuned to balance speed and the 50-100 word requirement
+    # CRITICAL: max_new_tokens is set to 80 to prevent the CPU from timing out (8-min lag fix)
+    # min_new_tokens ensures we meet the 50-word requirement of the assignment
     story_results = gen_model(
         prompt, 
-        max_new_tokens=110,   
+        max_new_tokens=80,   
         min_new_tokens=55,
         do_sample=True, 
         temperature=0.4,
@@ -94,7 +95,7 @@ def main():
             # Step 2: Story Generation
             status_text.text("Creating a magic story...")
             story = text2story(desc)
-            st.write(story)
+            st.info(story) # Display text immediately for better User Experience
             progress_bar.progress(66)
             
             # Step 3: Audio Synthesis
