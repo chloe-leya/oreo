@@ -3,16 +3,20 @@ from transformers import pipeline
 from PIL import Image
 
 # --- 1. CONFIGURATION ---
+# Set the page title and a kid-friendly icon for the browser tab
 st.set_page_config(page_title="Magic Story App", page_icon="🧸")
 
 @st.cache_resource
 def load_models():
-    """Loads pre-trained models. Optimized for Streamlit Cloud stability."""
-    # Image Captioning 
+    """
+    Loads pre-trained models using the Hugging Face pipeline.
+    @st.cache_resource ensures models are loaded only once to save memory and time.
+    """
+    # Image Captioning：BLIP model for generating a text description from an uploaded image
     img_pipe = pipeline("image-to-text", model="Salesforce/blip-image-captioning-base")
-    # Text Generation 
+    # Text Generation： TinyLlama model for creative text generation (optimized for small-scale deployment)
     gen_pipe = pipeline("text-generation", model="TinyLlama/TinyLlama-1.1B-Chat-v1.0")
-    # Standard TTS 
+    # Standard TTS： Facebook's MMS model for converting the generated story into natural speech
     tts_pipe = pipeline("text-to-audio", model="Matthijs/mms-tts-eng")
     return img_pipe, gen_pipe, tts_pipe
 
@@ -21,6 +25,7 @@ def load_models():
 def img2text(image_data):
     """Function 1: Extracts description from image."""
     img_model, _, _ = load_models()
+    # Convert image to RGB to ensure compatibility with the BLIP model
     image = Image.open(image_data).convert("RGB")
     result = img_model(image)
     return result[0]["generated_text"]
@@ -36,7 +41,8 @@ def text2story(description):
         f"Rules: Only use kind words. Children must share and be friends. No fighting or accidents. "
         f"Length: Exactly 3 to 4 simple sentences (around 60 words). <|assistant|>\n"
     )
-
+    
+    # Sampling parameters tuned for creative yet stable output (low temperature = more polite)
     story_results = gen_model(
         prompt, 
         max_new_tokens=120,   
@@ -45,10 +51,12 @@ def text2story(description):
         temperature=0.3,
         repetition_penalty=1.2
     )
-  
+
+    # Clean the output to ensure it only contains the assistant's generated story
     full_text = story_results[0]['generated_text']
     story_content = full_text.split("<|assistant|>\n")[-1].strip()
 
+    # Ensure the story ends at a full sentence
     if "." in story_content:
         story_content = story_content[:story_content.rindex(".")+1]
 
@@ -74,21 +82,25 @@ def main():
         if st.button("🌟 Start Magic"):
             progress_bar = st.progress(0)
             status_text = st.empty()
-            
+
+            # Step 1: Image Captioning
             status_text.text("Reading the picture...")
             desc = img2text(uploaded_file)
             progress_bar.progress(33)
-            
+
+            # Step 2: Story Generation
             status_text.text("Creating a magic story...")
             story = text2story(desc)
             st.write(story)
             progress_bar.progress(66)
             
+            # Step 3: Audio Synthesis
             status_text.text("Turning story into voice...")
             audio_data = text2audio(story)
             st.audio(audio_data["audio"], sample_rate=audio_data["sampling_rate"])
             progress_bar.progress(100)
-            
+
+            # Final celebration effect for kids
             status_text.text("Done!")
             st.balloons()
 
