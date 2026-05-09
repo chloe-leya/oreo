@@ -45,7 +45,7 @@ def text2story(description):
     # Optimized parameters for speed and word count requirements
     story_results = gen_model(
         prompt, 
-        max_new_tokens=110,   
+        max_new_tokens=100,   
         min_new_tokens=55, 
         do_sample=True, 
         temperature=0.5,
