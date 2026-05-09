@@ -46,8 +46,8 @@ def text2story(description):
     # Sampling parameters tuned for creative yet stable output (low temperature = more polite)
     story_results = gen_model(
         prompt, 
-        max_new_tokens=120,   
-        min_new_tokens=60, 
+        max_new_tokens=110,   
+        min_new_tokens=50, 
         do_sample=True, 
         temperature=0.3,
         repetition_penalty=1.2
