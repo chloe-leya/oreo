@@ -36,9 +36,8 @@ def text2story(description):
         f"<|user|>\n"
         f"Context: {description}. "
         f"Write a sweet and peaceful story for a 5-year-old child that strictly follows the Context provided. "
-        f"The story must be 60 words and have a clear beginning and ending. "
+        f"The story must be 50-100 words and have a clear beginning and ending. "
         f"Guidelines: Use simple, happy words. The atmosphere is safe and gentle. "
-        f"Ensure every detail in the story matches the Context. "
         f"End with 'The end'. <|assistant|>\n"
     )
     
