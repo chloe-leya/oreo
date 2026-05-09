@@ -38,15 +38,15 @@ def text2story(description):
         f"<|user|>\n"
         f"Write a very short, gentle, and sweet story for a 5-year-old child about {description}. "
         f"The story must be about 60 words and have a clear beginning and ending. "
-        f"Guidelines: Use only happy words. Everything is peaceful and safe. No loud noises or accidents. "
+        f"Use only happy words. Everything is peaceful and safe. No loud noises or accidents. "
         f"End the story with a warm closing like 'The end'. <|assistant|>\n"
     )
     
     # Sampling parameters tuned for creative yet stable output (low temperature = more polite)
     story_results = gen_model(
         prompt, 
-        max_new_tokens=110,   
-        min_new_tokens=50, 
+        max_new_tokens=90,   
+        min_new_tokens=55, 
         do_sample=True, 
         temperature=0.3,
         repetition_penalty=1.2
